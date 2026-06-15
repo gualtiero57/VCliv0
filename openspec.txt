@@ -1,0 +1,158 @@
+================================================================================
+                    SUNTO DEL PROGETTO OPENSPEC (ospecproj)
+================================================================================
+
+COS'E' OPENSPEC
+--------------------------------------------------------------------------------
+OpenSpec e' un framework "spec-driven" per gestire lo sviluppo software
+attraverso specifiche formali. Funziona tramite una CLI (comando "openspec") e
+un set di skill/workflow che guidano un agente AI nel ciclo di vita di ogni
+modifica al codice: dall'idea iniziale, alla progettazione, all'implementazione,
+fino all'archiviazione.
+
+Lo schema utilizzato e' "spec-driven" (definito in openspec/config.yaml).
+
+
+STRUTTURA DEL PROGETTO
+--------------------------------------------------------------------------------
+
+  ospecproj/
+  ├── .agent/
+  │   ├── skills/                    # Skill invocabili dall'agente AI
+  │   │   ├── openspec-propose/      # Proporre una nuova modifica
+  │   │   ├── openspec-apply-change/ # Implementare i task di una modifica
+  │   │   ├── openspec-explore/      # Esplorare idee e problemi
+  │   │   ├── openspec-archive-change/ # Archiviare una modifica completata
+  │   │   └── openspec-sync-specs/   # Sincronizzare delta spec nelle spec main
+  │   └── workflows/                 # Workflow (slash command) corrispondenti
+  │       ├── opsx-propose.md
+  │       ├── opsx-apply.md
+  │       ├── opsx-explore.md
+  │       ├── opsx-archive.md
+  │       └── opsx-sync.md
+  └── openspec/
+      ├── config.yaml                # Configurazione (schema: spec-driven)
+      ├── specs/                     # Specifiche principali (main specs)
+      └── changes/                   # Modifiche attive e archivio
+          └── archive/               # Modifiche completate e archiviate
+
+
+CICLO DI VITA DI UNA MODIFICA (CHANGE)
+--------------------------------------------------------------------------------
+
+Il flusso di lavoro segue 5 fasi principali:
+
+  1. EXPLORE  ──>  2. PROPOSE  ──>  3. APPLY  ──>  4. SYNC  ──>  5. ARCHIVE
+
+  Ogni fase ha un comando slash dedicato:
+    /opsx-explore   /opsx-propose   /opsx-apply   /opsx-sync   /opsx-archive
+
+
+1. EXPLORE (/opsx-explore)
+   - Modalita' di esplorazione e pensiero libero.
+   - NON si scrive codice, si ragiona.
+   - Si possono investigare il codebase, fare diagrammi ASCII, confrontare
+     opzioni, chiarire requisiti.
+   - L'agente agisce come "partner di pensiero": curioso, visuale, adattivo.
+   - Puo' sfociare in una proposta formale o restare come attivita' esplorativa.
+
+2. PROPOSE (/opsx-propose)
+   - Crea una nuova "change" con tutti gli artefatti in un solo passo.
+   - Genera automaticamente 3 artefatti:
+     * proposal.md  → Cosa e perche' (il problema e la soluzione proposta)
+     * design.md    → Come (architettura, decisioni tecniche)
+     * tasks.md     → Passi di implementazione (lista di task)
+   - Usa la CLI: "openspec new change <nome>" per creare la directory.
+   - Gli artefatti vengono creati in ordine di dipendenza.
+   - Al termine, la change e' pronta per l'implementazione.
+
+3. APPLY (/opsx-apply)
+   - Implementa i task definiti in tasks.md.
+   - Legge tutti i file di contesto (proposal, specs, design, tasks).
+   - Per ogni task pendente:
+     * Mostra quale task sta lavorando
+     * Fa le modifiche al codice
+     * Segna il task come completato: [ ] → [x]
+   - Si ferma se incontra ambiguita', errori o problemi di design.
+   - Supporta un modello fluido: puo' essere invocato in qualsiasi momento,
+     anche prima che tutti gli artefatti siano completi.
+
+4. SYNC (/opsx-sync)
+   - Sincronizza le "delta spec" di una change nelle spec principali (main).
+   - Operazione guidata dall'agente (agent-driven), non programmatica.
+   - Le delta spec contengono sezioni:
+     * ADDED Requirements    → Nuovi requisiti da aggiungere
+     * MODIFIED Requirements → Modifiche a requisiti esistenti
+     * REMOVED Requirements  → Requisiti da rimuovere
+     * RENAMED Requirements  → Requisiti da rinominare
+   - Il merge e' intelligente: applica solo le modifiche parziali senza
+     sovrascrivere contenuto esistente non menzionato.
+   - L'operazione e' idempotente (ripeterla da lo stesso risultato).
+
+5. ARCHIVE (/opsx-archive)
+   - Archivia una change completata.
+   - Verifica lo stato di completamento (artefatti e task).
+   - Se ci sono delta spec, propone la sincronizzazione prima dell'archiviazione.
+   - Sposta la directory della change in:
+       changes/archive/YYYY-MM-DD-<nome-change>/
+   - Non blocca l'archivio per warning (task/artefatti incompleti), ma chiede
+     conferma all'utente.
+
+
+ARTEFATTI DI UNA CHANGE
+--------------------------------------------------------------------------------
+
+Ogni change (modifica) genera fino a 4 tipi di artefatti:
+
+  ┌──────────────┬──────────────────────────────────────────────────────────┐
+  │  Artefatto   │  Descrizione                                           │
+  ├──────────────┼──────────────────────────────────────────────────────────┤
+  │ proposal.md  │ Descrive COSA si vuole fare e PERCHE'. Definisce lo    │
+  │              │ scope della modifica.                                   │
+  ├──────────────┼──────────────────────────────────────────────────────────┤
+  │ design.md    │ Descrive COME si implementa. Architettura, decisioni   │
+  │              │ tecniche, pattern utilizzati.                           │
+  ├──────────────┼──────────────────────────────────────────────────────────┤
+  │ specs/       │ Delta spec per capability. Definiscono requisiti in     │
+  │              │ formato WHEN/THEN con scenari.                          │
+  ├──────────────┼──────────────────────────────────────────────────────────┤
+  │ tasks.md     │ Lista di task con checkbox (- [ ] / - [x]) che         │
+  │              │ vengono completati durante l'implementazione.           │
+  └──────────────┴──────────────────────────────────────────────────────────┘
+
+
+COMANDI CLI PRINCIPALI
+--------------------------------------------------------------------------------
+
+  openspec new change "<nome>"
+    → Crea una nuova change con struttura scaffoldata.
+
+  openspec status --change "<nome>" --json
+    → Mostra lo stato della change (artefatti, dipendenze, progresso).
+
+  openspec instructions <artifact-id> --change "<nome>" --json
+    → Ottiene le istruzioni per creare uno specifico artefatto
+      (template, contesto, regole, dipendenze, path di output).
+
+  openspec instructions apply --change "<nome>" --json
+    → Ottiene le istruzioni per l'implementazione
+      (file di contesto, progresso, lista task, stato).
+
+  openspec list --json
+    → Elenca tutte le change attive.
+
+
+PRINCIPI CHIAVE
+--------------------------------------------------------------------------------
+
+  • Spec-driven: le specifiche guidano lo sviluppo, non il contrario.
+  • Flusso fluido: le azioni non sono bloccate in fasi rigide. Si puo'
+    esplorare durante l'implementazione, aggiornare artefatti in corso d'opera.
+  • Merge intelligente: le delta spec rappresentano "intento", non
+    sostituzione totale. L'agente applica solo le modifiche necessarie.
+  • Guardrail: l'agente si ferma su ambiguita', errori o problemi di design
+    piuttosto che procedere con supposizioni.
+  • Workspace guard: in modalita' workspace-planning, le operazioni su repo
+    esterni sono bloccate per sicurezza.
+
+================================================================================

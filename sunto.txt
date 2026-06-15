@@ -1,0 +1,25 @@
+================================================================================
+                    META-PROGETTO 
+================================================================================
+
+Il modello è realizzato per conentire un start di progetto velo ce e standardizzato
+--------------------------------------------------------------------------------
+
+1) Personalizzare il framework VIBE-Coding
+2) Creare un file AGENTS.md che faccia riferimento al file modificato sopra
+3) Verificare
+
+================================================================================
+
+Una volta raggiunta la prima release si può usare openspec per la manutenzione
+
+
+================================================================================
+
+Addons
+
+Openspec
+Graphify
+OpenCode-design-analysis
+
+
